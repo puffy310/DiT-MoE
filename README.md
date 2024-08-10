@@ -1,3 +1,9 @@
+# Dit-MoE experiments
+
+Workspace to publish and experiment with this codebase.
+
+# Original README
+
 ## Scaling Diffusion Transformers with Mixture of Experts <br><sub>Official PyTorch Implementation</sub>
 
 [![arXiv](https://img.shields.io/badge/arXiv-2407.11633-b31b1b.svg)](https://arxiv.org/abs/2407.11633)
