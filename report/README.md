@@ -1,71 +1,79 @@
-# Report
-This is work on a report.
+# Training Script for DiT using DeepSpeed
 
-Algorithm: Training DiT Model Using DeepSpeed
+## Overview
+This guide provides a comprehensive walkthrough for training a DiT (Diffusion in Transformer) model using DeepSpeed. The script is designed to leverage distributed data parallel (DDP) training across multiple GPUs.
 
-Input: Command-line arguments (args)
-Output: Trained DiT model
+## Software Requirements
+- Python 3.7+
+- PyTorch 1.8+
+- DeepSpeed
+- torchvision
+- numpy
+- diffusers
 
-1. Initialize Distributed Environment:
-   - Initialize DeepSpeed distributed training.
-   - Set rank, device, and seed based on global seed and world size.
-   - Set CUDA device.
+## Installation Instructions
+1. **Install PyTorch**:
+   ```bash
+   pip install torch torchvision
+   ```
 
-2. Create Experiment Directory:
-   - Create an experiment directory and checkpoint directory if rank is 0.
-   - Create a logger to log training progress.
+2. **Install DeepSpeed**:
+   ```bash
+   pip install deepspeed
+   ```
 
-3. Create Model:
-   - Ensure image size is divisible by 8.
-   - Initialize the DiT model with specified parameters.
-   - Load pretrained weights if resuming from a checkpoint.
+3. **Install diffusers**:
+   ```bash
+   pip install diffusers
+   ```
 
-4. Initialize Diffusion and VAE:
-   - Create diffusion model with default settings.
-   - Load VAE model and move it to the appropriate device.
+4. **Install other dependencies**:
+   ```bash
+   pip install numpy
+   ```
 
-5. Prepare Data:
-   - Define image transformation pipeline.
-   - Load dataset and create a distributed sampler.
-   - Create data loader with specified batch size and other parameters.
+## Hardware Requirements
+- At least one NVIDIA GPU (recommended: A100 for faster training)
+- Sufficient VRAM (depending on the model size and batch size)
 
-6. Initialize DeepSpeed Model Engine:
-   - Initialize DeepSpeed model engine with the model and optimizer.
+## Needed Downloads
+- **Pre-trained VAE model**: Download the pre-trained VAE model from the specified path or use a default path provided in the script.
+- **Dataset**: Ensure the dataset is available at the specified `data-path`.
 
-7. Training Loop:
-   - For each epoch:
-     a. Set epoch for the distributed sampler.
-     b. For each batch of data (x, y):
-        i. Move data to the appropriate device.
-        ii. Encode images to latent space using VAE.
-        iii. Sample timesteps for diffusion.
-        iv. Compute training losses using the diffusion model.
-        v. Backpropagate the loss and update model parameters.
-        vi. Log training loss and speed periodically.
-        vii. Save model checkpoint periodically.
+## Configuration
+Before running the script, ensure you have the following configurations set:
+- **Data Path**: Specify the path to your dataset.
+- **Results Directory**: Directory where results and checkpoints will be saved.
+- **Model Configuration**: Choose the DiT model configuration from the available options.
+- **VAE Path**: Path to the pre-trained VAE model.
+- **Image Size**: Image size for training (256 or 512).
+- **Number of Classes**: Number of classes in your dataset.
+- **Epochs**: Number of training epochs.
+- **Batch Size**: Batch size for training.
+- **Global Seed**: Seed for reproducibility.
+- **Number of Workers**: Number of worker threads for data loading.
+- **Logging Frequency**: Frequency of logging training metrics.
+- **Checkpoint Frequency**: Frequency of saving model checkpoints.
+- **Local Rank**: Local rank for distributed training.
 
-8. Cleanup:
-   - Destroy the distributed process group.
+## Running the Script
+To run the script, use the following command:
+```bash
+deepspeed --hostfile <hostfile> --include="localhost:0,1" train.py --data-path <data-path> --results-dir <results-dir> --model <model> --vae-path <vae-path> --image-size <image-size> --num-classes <num-classes> --epochs <epochs> --train_batch_size <train_batch_size> --global-seed <global-seed> --num-workers <num-workers> --log-every <log-every> --ckpt-every <ckpt-every> --local-rank <local-rank>
+```
 
-Function Definitions:
+Replace the placeholders with your specific configurations.
 
-Function requires_grad(model, flag):
-   - Set requires_grad flag for all parameters in the model.
+## Script Breakdown
+- **Imports**: Import necessary libraries and modules.
+- **Helper Functions**: Functions for setting gradients, cleaning up DDP, creating a logger, and center cropping images.
+- **Training Loop**: Main training loop that initializes the model, dataset, and optimizer, and performs the training steps.
+- **Arguments Parsing**: Parses command-line arguments for configuration.
+- **Main Function**: Orchestrates the training process, including model initialization, data loading, and training loop.
 
-Function cleanup():
-   - Destroy the distributed process group.
+## Notes
+- Ensure CUDA and cuDNN are properly installed and configured for optimal performance.
+- Monitor GPU memory usage and adjust batch size if necessary.
+- For distributed training across multiple nodes, ensure proper network configuration and use the appropriate hostfile.
 
-Function create_logger(logging_dir):
-   - Create a logger that writes to a log file and stdout if rank is 0, otherwise create a dummy logger.
-
-Function center_crop_arr(pil_image, image_size):
-   - Center crop the image to the specified size.
-
-Main Function:
-
-Function main(args):
-   - Perform steps 1 to 8 as described above.
-
-If __name__ == "__main__":
-   - Parse command-line arguments.
-   - Call main function with parsed arguments.
+By following this guide, you should be able to set up and train a DiT model using DeepSpeed efficiently.
